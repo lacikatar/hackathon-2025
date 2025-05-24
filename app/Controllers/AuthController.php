@@ -31,6 +31,15 @@ class AuthController extends BaseController
     public function register(Request $request, Response $response): Response
     {
         // TODO: call corresponding service to perform user registration
+        $username = $_POST['username'];
+        $password = $_POST['password'];
+        try{
+            $this->authService->register($username, $password);
+        }
+        catch(\RuntimeException $e){
+            $this->logger->error('Registration failed: ' . $e->getMessage());
+            return $this->render($response, 'auth/register.twig', ['error' => $e->getMessage()]);
+        }
 
         return $response->withHeader('Location', '/login')->withStatus(302);
     }
@@ -44,6 +53,15 @@ class AuthController extends BaseController
     {
         // TODO: call corresponding service to perform user login, handle login failures
 
+        $username = $_POST['username'];
+        $password = $_POST['password'];
+        try{
+            $this->authService->attempt($username, $password);
+        }
+        catch(\RuntimeException $e){
+            $this->logger->error(''. $e->getMessage());
+            return $this->render($response, 'auth/login.twig', ['error' => $e->getMessage()]);
+        }
         return $response->withHeader('Location', '/')->withStatus(302);
     }
 

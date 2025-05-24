@@ -39,12 +39,54 @@ class PdoUserRepository implements UserRepositoryInterface
 
     public function findByUsername(string $username): ?User
     {
-        // TODO: Implement findByUsername() method.
-        return null;
+       $query = 'SELECT * from users where username = :username';
+       $stmt = $this->pdo->prepare($query);
+       $stmt->execute(['username'=> $username]);
+       $result= $stmt->fetch();
+       if($result === false)
+       {
+            return null;
+       }
+
+          return new User(
+            $result['id'],
+            $result['username'],
+            $result['password_hash'],
+            new DateTimeImmutable($result['created_at']),
+        );
     }
 
     public function save(User $user): void
     {
-        // TODO: Implement save() method.
+        $query = 'INSERT into users (username, password_hash, created_at) values (:username, :password_hash, :created_at)';
+        $stmt = $this->pdo->prepare($query);
+
+    $stmt->execute([ 'username' => $user->username,
+        'password_hash' => $user->passwordHash,
+        'created_at' => $user -> createdAt->format('Y-m-d H:i:s'),
+    ]);
+
+    $user->id=(int)$this->pdo->lastInsertId();
+    }
+
+    public function checkPassword(mixed $id, string $password): bool
+    {
+        $query = 'SELECT username, password_hash from users where id=:id';
+        $stmt=$this->pdo->prepare($query);
+        $stmt->execute(['id' => $id,]);
+
+        $result= $stmt->fetch();
+
+        $db_password= $result['password'];
+
+        if(password_verify($password, $db_password))
+        {
+            return true;
+        }
+        return false;
+
+
+
+
     }
 }
