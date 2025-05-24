@@ -69,24 +69,5 @@ class PdoUserRepository implements UserRepositoryInterface
     $user->id=(int)$this->pdo->lastInsertId();
     }
 
-    public function checkPassword(mixed $id, string $password): bool
-    {
-        $query = 'SELECT username, password_hash from users where id=:id';
-        $stmt=$this->pdo->prepare($query);
-        $stmt->execute(['id' => $id,]);
-
-        $result= $stmt->fetch();
-
-        $db_password= $result['password'];
-
-        if(password_verify($password, $db_password))
-        {
-            return true;
-        }
-        return false;
-
-
-
-
-    }
+    
 }

@@ -69,11 +69,20 @@ class Kernel
         (require __DIR__.'/../config/settings.php')($app);
         (require __DIR__.'/../config/routes.php')($app);
 
-        // TODO: Handle session initialization
+        
+        if( session_status() === PHP_SESSION_NONE)
+        {
+            ini_set('session.cookie_httponly', 1); 
+            ini_set('session.cookie_secure', 1);   
+            ini_set('session.use_strict_mode', 1);
 
-        // Make current user ID globally available to twig templates
-        // TODO: change the following line to set the user ID stored in the session, for when user is logged
-        $loggedInUserId = null;
+            session_name('hackathon_session');
+            
+            session_start();
+        }
+
+        
+        $loggedInUserId = $_Session['user_id'] ?? null;
         $twig = $container->get(Twig::class);
         $twig->getEnvironment()->addGlobal('currentUserId', $loggedInUserId);
 

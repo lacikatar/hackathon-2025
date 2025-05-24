@@ -36,6 +36,18 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
     public function save(Expense $expense): void
     {
         // TODO: Implement save() method.
+        $query = 'INSERT into expenses (user_id, date, category, amount_cents, description) values (:user_id, :date, :category, :amount_cents, :description))';
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute([ 'user_id' => $expense->user_id,
+          'date' => $expense ->date,
+          'category' => $expense->category,
+          'amount_cents' => $expense->amountCents,
+          'description' => $expense->description
+
+        ]);
+        
+        $expense->id=(int)$this->pdo->lastInsertId();
+
     }
 
     public function delete(int $id): void
@@ -71,6 +83,7 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
 
     public function averageAmountsByCategory(array $criteria): array
     {
+        $quey = 'SELECT Category, AVG(amount_cents) from expeses '
         // TODO: Implement averageAmountsByCategory() method.
         return [];
     }

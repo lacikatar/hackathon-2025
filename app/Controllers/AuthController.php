@@ -57,18 +57,21 @@ class AuthController extends BaseController
         $password = $_POST['password'];
         try{
             $this->authService->attempt($username, $password);
+
+           
         }
         catch(\RuntimeException $e){
             $this->logger->error(''. $e->getMessage());
             return $this->render($response, 'auth/login.twig', ['error' => $e->getMessage()]);
         }
+       
         return $response->withHeader('Location', '/')->withStatus(302);
     }
 
     public function logout(Request $request, Response $response): Response
     {
         // TODO: handle logout by clearing session data and destroying session
-
+        session_destroy();
         return $response->withHeader('Location', '/login')->withStatus(302);
     }
 }

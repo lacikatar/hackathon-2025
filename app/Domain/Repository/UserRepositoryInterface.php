@@ -17,5 +17,5 @@ interface UserRepositoryInterface
 
     public function save(User $user): void;
 
-    public function checkPassword(mixed $id, string $password): bool;
+    
 }

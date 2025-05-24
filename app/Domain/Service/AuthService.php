@@ -15,10 +15,7 @@ class AuthService
 
     public function register(string $username, string $password): User
     {
-        // TODO: check that a user with same username does not exist, create new user and persist
-
-        //check if username is availible, and if it is, it saves
-
+        
        $available= $this ->users->findByUsername($username);
         if($available !== null)
         {
@@ -32,16 +29,6 @@ class AuthService
         return $user;
     }
     
-        
-        
-
-        
-        // TODO: make sure password is not stored in plain, and proper PHP functions are used for that
-
-        // TODO: here is a sample code to start with
-        
-
-    
 
     public function attempt(string $username, string $password): bool
     {
@@ -54,7 +41,27 @@ class AuthService
             throw new \RuntimeException('Password does not match');
         }
 
+        // Set session data
+        $_SESSION['user_id'] = $user->id;
+        $_SESSION['username'] = $user->username;
+        
+        // Regenerate session ID for security
+        session_regenerate_id(true);
+
         return true;
     }
-    
+
+    public function logout(): void
+    {
+        // Clear all session data
+        $_SESSION = [];
+        
+        // Destroy the session cookie
+        if (isset($_COOKIE[session_name()])) {
+            setcookie(session_name(), '', time() - 3600, '/');
+        }
+        
+        // Destroy the session
+        session_destroy();
+    }
 }
