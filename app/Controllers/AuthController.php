@@ -41,6 +41,7 @@ class AuthController extends BaseController
             return $this->render($response, 'auth/register.twig', ['error' => $e->getMessage()]);
         }
 
+        $this->logger->info('Register of' . $username . ' was succesful');
         return $response->withHeader('Location', '/login')->withStatus(302);
     }
 
@@ -64,7 +65,7 @@ class AuthController extends BaseController
             $this->logger->error(''. $e->getMessage());
             return $this->render($response, 'auth/login.twig', ['error' => $e->getMessage()]);
         }
-       
+       $this->logger->info( $username . 'sucessfully logged in');
         return $response->withHeader('Location', '/')->withStatus(302);
     }
 

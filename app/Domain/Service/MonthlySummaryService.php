@@ -15,6 +15,7 @@ class MonthlySummaryService
 
     public function computeTotalExpenditure(User $user, int $year, int $month): float
     {
+        
         // TODO: compute expenses total for year-month for a given user
         return 0;
     }

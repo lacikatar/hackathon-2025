@@ -72,7 +72,12 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
     public function listExpenditureYears(User $user): array
     {
         // TODO: Implement listExpenditureYears() method.
-        return [];
+
+        $query = 'SELECT Distinct Year(e.Date) From expenditures e';
+        $stmt = $this -> pdo-> prepare($quey);
+        $stmt->execute();
+        $years[]= $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return $years[];
     }
 
     public function sumAmountsByCategory(array $criteria): array
@@ -83,7 +88,7 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
 
     public function averageAmountsByCategory(array $criteria): array
     {
-        $quey = 'SELECT Category, AVG(amount_cents) from expeses '
+       // $quey = 'SELECT Category, AVG(amount_cents) from expeses  '
         // TODO: Implement averageAmountsByCategory() method.
         return [];
     }
