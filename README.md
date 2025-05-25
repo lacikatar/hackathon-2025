@@ -104,10 +104,14 @@ A solution with passing analysis and unit tests will receive extra points.
 ## Delivery details
 
 Participant:
-- Full name: ...
+- Full name: Tar Laszlo
 - Email address: ...
 
 Features fully implemented:
-- ...
+- Login
+- Register
+- Expenses add
+- Expenses delete
+- Expenses edit
 
 Other instructions about setting up the application (if any): ...
