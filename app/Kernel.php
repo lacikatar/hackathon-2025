@@ -83,8 +83,10 @@ class Kernel
 
         
         $loggedInUserId = $_SESSION['user_id'] ?? null;
+        $loggedInUsername = $_SESSION['username'] ?? null;
         $twig = $container->get(Twig::class);
         $twig->getEnvironment()->addGlobal('currentUserId', $loggedInUserId);
+        $twig->getEnvironment()->addGlobal('currentUserName', $loggedInUsername);
 
         return $app;
     }

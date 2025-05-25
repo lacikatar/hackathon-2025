@@ -59,14 +59,80 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
     public function findBy(array $criteria, int $from, int $limit): array
     {
         // TODO: Implement findBy() method.
-        return [];
+        $query= 'SELECT * FROM expenses where user_id=:user_id';
+        $params=[':user_id'=> $criteria['user_id']];
+
+        if(!empty($criteria['category'])){
+            $query .=' AND category = :category';
+            $params[':category']=$criteria['category'];
+        }
+
+        if(!empty($criteria['date_from']))
+        {
+            $query .= ' AND date >= :date_from';
+            $params[':date_from']=$criteria['date_from'];
+        }
+
+        if(!empty($criteria['date_to']))
+        {
+            $query .= ' AND date <= :date_to';
+            $params[':date_to']=$criteria['date_to'];
+        }
+
+        $query .= ' ORDER BY date DESC LIMIT :limit OFFSET :from';
+        $stmt = $this->pdo->prepare($query);
+        foreach($params as $key => $value){
+            $stmt->bindValue($key, $value);
+        }
+
+        $stmt->bindValue(':limit',$limit,PDO::PARAM_INT);
+        $stmt->bindValue(':from',$from,PDO::PARAM_INT);
+        $stmt->execute();
+
+        $result=$stmt->fetchAll(PDO::FETCH_ASSOC);  
+
+    
+        return $result;
     }
 
 
     public function countBy(array $criteria): int
     {
+        //for pagination ?
         // TODO: Implement countBy() method.
-        return 0;
+         $query= 'SELECT COUNT(*) FROM expenses where user_id=:user_id';
+        $params=[':user_id'=> $criteria['user_id']];
+
+        if(!empty($criteria['category'])){
+            $query .=' AND category = :category';
+            $params[':category']=$criteria['category'];
+        }
+
+        if(!empty($criteria['date_from']))
+        {
+            $query .= ' AND date >= :date_from';
+            $params[':date_from']=$criteria['date_from'];
+        }
+
+        if(!empty($criteria['date_to']))
+        {
+            $query .= ' AND date <= :date_to';
+            $params[':date_to']=$criteria['date_to'];
+        }
+
+       
+        $stmt = $this->pdo->prepare($query);
+        foreach($params as $key => $value){
+            $stmt->bindValue($key, $value);
+        }
+
+        $stmt->execute();
+
+        $result=(int)$stmt->fetchColumn();
+
+    
+       
+        return $result;
     }
 
     public function listExpenditureYears(User $user): array
@@ -74,29 +140,107 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
         // TODO: Implement listExpenditureYears() method.
 
         $query = 'SELECT Distinct Year(e.Date) From expenditures e';
-        $stmt = $this -> pdo-> prepare($quey);
+        $stmt = $this -> pdo-> prepare($query);
         $stmt->execute();
-        $years[]= $stmt->fetchAll(PDO::FETCH_COLUMN);
-        return $years[];
+        $years= $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return $years;
     }
 
     public function sumAmountsByCategory(array $criteria): array
     {
         // TODO: Implement sumAmountsByCategory() method.
-        return [];
+        $query = ' SELECT category, SUM(Amount_cents) from expenses where user_id=:user_id';
+        $params=[':user_id'=> $criteria['user_id']];
+        if(!empty($criteria['category'])){
+            $query .= ' AND category = :category ';
+            $params[':category']=$criteria['category'];
+        }
+        if(!empty($criteria['date_from'])){
+            $query .= ' AND date >= :date_from';
+            $params[':date_from']=$criteria['date_from'];
+
+        }
+        if(!empty($criteria['date_to'])){
+            $query .= ' AND date <= :date_to';
+            $params[':date_to']=$criteria['date_to'];
+        }
+
+        $query .= ' GROUP BY category';
+
+        $stmt= $this->pdo->prepare($query);
+        foreach($params as $key => $value){
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
+
+        $result=$stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $result;
     }
 
     public function averageAmountsByCategory(array $criteria): array
     {
-       // $quey = 'SELECT Category, AVG(amount_cents) from expeses  '
+       
         // TODO: Implement averageAmountsByCategory() method.
-        return [];
+        $query = ' SELECT category, AVG(Amount_cents) from expenses where user_id=:user_id';
+        $params=[':user_id'=> $criteria['user_id']];
+        if(!empty($criteria['category'])){
+            $query .= ' AND category = :category ';
+            $params[':category']=$criteria['category'];
+        }
+        if(!empty($criteria['date_from'])){
+            $query .= ' AND date >= :date_from';
+            $params[':date_from']=$criteria['date_from'];
+
+        }
+        if(!empty($criteria['date_to'])){
+            $query .= ' AND date <= :date_to';
+            $params[':date_to']=$criteria['date_to'];
+        }
+
+        $query .= ' GROUP BY category';
+
+        $stmt= $this->pdo->prepare($query);
+        foreach($params as $key => $value){
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
+
+        $result=$stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $result;
     }
 
     public function sumAmounts(array $criteria): float
     {
         // TODO: Implement sumAmounts() method.
-        return 0;
+
+        $query = ' SELECT  SUM(Amount_cents) from expenses where user_id=:user_id';
+        $params=[':user_id'=> $criteria['user_id']];
+        if(!empty($criteria['category'])){
+            $query .= ' AND category = :category ';
+            $params[':category']=$criteria['category'];
+        }
+        if(!empty($criteria['date_from'])){
+            $query .= ' AND date >= :date_from';
+            $params[':date_from']=$criteria['date_from'];
+
+        }
+        if(!empty($criteria['date_to'])){
+            $query .= ' AND date <= :date_to';
+            $params[':date_to']=$criteria['date_to'];
+        }
+
+       
+
+        $stmt= $this->pdo->prepare($query);
+        foreach($params as $key => $value){
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
+
+        $result=$stmt->fetchColumn();
+        return $result !==null ? (float) $result :0.0;
+
+        
     }
 
     /**

@@ -22,7 +22,16 @@ class DashboardController extends BaseController
     {
         // TODO: parse the request parameters
         // TODO: load the currently logged-in user
+
+        //$user =$this->users->find((int)$_SESSION['user_id']);
+
+        
+
         // TODO: get the list of available years for the year-month selector
+
+       // $years[]=$this->expenses->listExpenditureYears($user);
+        
+
         // TODO: call service to generate the overspending alerts for current month
         // TODO: call service to compute total expenditure per selected year/month
         // TODO: call service to compute category totals per selected year/month
