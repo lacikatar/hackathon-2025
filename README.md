@@ -105,7 +105,7 @@ A solution with passing analysis and unit tests will receive extra points.
 
 Participant:
 - Full name: Tar Laszlo
-- Email address: ...
+- Email address: tarlacyka26@gmail.com
 
 Features fully implemented:
 - Login //with password hashing
