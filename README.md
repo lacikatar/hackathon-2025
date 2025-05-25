@@ -108,10 +108,12 @@ Participant:
 - Email address: ...
 
 Features fully implemented:
-- Login
-- Register
+- Login //with password hashing
+- Register //with password hashing and confirm password function
+- Logout
 - Expenses add
 - Expenses delete
 - Expenses edit
+- Dashboard
 
 Other instructions about setting up the application (if any): ...
