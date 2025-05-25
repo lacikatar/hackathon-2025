@@ -8,6 +8,7 @@ use App\Domain\Entity\Expense;
 use App\Domain\Entity\User;
 use App\Domain\Repository\ExpenseRepositoryInterface;
 use DateTimeImmutable;
+use Exception;
 use Psr\Http\Message\UploadedFileInterface;
 
 class ExpenseService
@@ -18,7 +19,7 @@ class ExpenseService
 
     public function list(User $user, int $year, int $month, int $pageNumber, int $pageSize): array
     {
-        // TODO: implement this and call from controller to obtain paginated list of expenses
+       
         $criteria = [ 'user_id' =>$user->id,
                         'date_from' => sprintf('%04d-%02d-01', $year, $month),
                         'date_to' => sprintf('%04d-%02d-01', $year, $month),
@@ -35,21 +36,28 @@ class ExpenseService
         DateTimeImmutable $date,
         string $category,
     ): void {
-        // TODO: implement this to create a new expense entity, perform validation, and persist
+        if ($amount <= 0) {
+            throw new Exception('Amount must be greater than 0.');
+        }
 
-          if ($amount <= 0) {
-        throw new InvalidArgumentException('Amount must be positive.');
-    }
+        if (empty($description)) {
+            throw new Exception('Description is required.');
+        }
 
-    if (empty(trim($category))) {
-        throw new InvalidArgumentException('Category cannot be empty.');
-    }
+        if (empty($category)) {
+            throw new Exception('Category is required.');
+        }
 
-    if (empty(trim($description))) {
-        throw new InvalidArgumentException('Description cannot be empty.');
-    }
-        // TODO: here is a code sample to start with
-        $expense = new Expense(null, $user->id, $date, $category, (int)$amount, $description);
+        $expense = new Expense(
+            null,
+            $user->id,
+            $date,
+            $category,
+            0, 
+            $description
+        );
+        $expense->setAmount($amount);
+
         $this->expenses->save($expense);
     }
 
@@ -60,33 +68,36 @@ class ExpenseService
         DateTimeImmutable $date,
         string $category,
     ): void {
-        // TODO: implement this to update expense entity, perform validation, and persist
         if ($amount <= 0) {
-        throw new InvalidArgumentException('Amount must be positive.');
+            throw new Exception('Amount must be greater than 0.');
+        }
+
+        if (empty($description)) {
+            throw new Exception('Description is required.');
+        }
+
+        if (empty($category)) {
+            throw new Exception('Category is required.');
+        }
+
+        $updatedExpense = new Expense(
+            $expense->id,
+            $expense->userId,
+            $date,
+            $category,
+            0, 
+            $description
+        );
+        $updatedExpense->setAmount($amount);
+
+        $this->expenses->save($updatedExpense);
     }
-
-    if (empty(trim($category))) {
-        throw new InvalidArgumentException('Category cannot be empty.');
-    }
-     if (empty(trim($description))) {
-        throw new InvalidArgumentException('Description cannot be empty.');
-
-    }
-
-    $expense->setAmountCents($amountCents);
-    $expense->setDescription($description);
-    $expense->setDate($date);
-    $expense->setCategory($category);
-
-    // Persist the updated expense
-    $this->expenses->save($expense);
-}
-
 
     public function importFromCsv(User $user, UploadedFileInterface $csvFile): int
     {
         // TODO: process rows in file stream, create and persist entities
         // TODO: for extra points wrap the whole import in a transaction and rollback only in case writing to DB fails
+        //I couldnt do this
 
         return 0; // number of imported rows
     }

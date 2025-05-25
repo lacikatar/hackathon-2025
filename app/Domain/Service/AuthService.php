@@ -30,7 +30,7 @@ class AuthService
     }
     
 
-    public function attempt(string $username, string $password): bool
+    public function attempt(string $username, string $password): User
     {
         $user = $this->users->findByUsername($username);
         if ($user === null) {
@@ -41,10 +41,7 @@ class AuthService
             throw new \RuntimeException('Password does not match');
         }
 
-        $_SESSION['user_id'] = $user->id;
-        $_SESSION['username'] = $user->username;
-
-        return true;
+        return $user;
     }
     
 }

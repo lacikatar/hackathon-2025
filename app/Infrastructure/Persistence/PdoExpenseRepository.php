@@ -35,19 +35,32 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
 
     public function save(Expense $expense): void
     {
-        // TODO: Implement save() method.
-        $query = 'INSERT into expenses (user_id, date, category, amount_cents, description) values (:user_id, :date, :category, :amount_cents, :description))';
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute([ 'user_id' => $expense->user_id,
-          'date' => $expense ->date,
-          'category' => $expense->category,
-          'amount_cents' => $expense->amountCents,
-          'description' => $expense->description
-
-        ]);
-        
-        $expense->id=(int)$this->pdo->lastInsertId();
-
+        //if not in db then insert
+        if ($expense->id === null) {
+            $query = 'INSERT into expenses (user_id, date, category, amount_cents, description) values (:user_id, :date, :category, :amount_cents, :description)';
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute([ 
+                'user_id' => $expense->userId,
+                'date' => $expense->date->format('Y-m-d'),
+                'category' => $expense->category,
+                'amount_cents' => $expense->amountCents,
+                'description' => $expense->description
+            ]);
+            
+            $expense->id = (int)$this->pdo->lastInsertId();
+            //if already in db update
+        } else {
+            $query = 'UPDATE expenses SET date = :date, category = :category, amount_cents = :amount_cents, description = :description WHERE id = :id AND user_id = :user_id';
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute([
+                'id' => $expense->id,
+                'user_id' => $expense->userId,
+                'date' => $expense->date->format('Y-m-d'),
+                'category' => $expense->category,
+                'amount_cents' => $expense->amountCents,
+                'description' => $expense->description
+            ]);
+        }
     }
 
     public function delete(int $id): void
@@ -58,48 +71,46 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
 
     public function findBy(array $criteria, int $from, int $limit): array
     {
-        // TODO: Implement findBy() method.
-        $query= 'SELECT * FROM expenses where user_id=:user_id';
-        $params=[':user_id'=> $criteria['user_id']];
+        $query = 'SELECT * FROM expenses WHERE user_id = :user_id';     //starting query, the criteria is only getting added to the query if its passed into it
+        $params = [':user_id' => $criteria['user_id']];                 //parameters of the query
 
-        if(!empty($criteria['category'])){
-            $query .=' AND category = :category';
-            $params[':category']=$criteria['category'];
+        if (!empty($criteria['category'])) {
+            $query .= ' AND category = :category';
+            $params[':category'] = $criteria['category'];
         }
 
-        if(!empty($criteria['date_from']))
-        {
+        if (!empty($criteria['date_from'])) {
             $query .= ' AND date >= :date_from';
-            $params[':date_from']=$criteria['date_from'];
+            $params[':date_from'] = $criteria['date_from'];
         }
 
-        if(!empty($criteria['date_to']))
-        {
+        if (!empty($criteria['date_to'])) {
             $query .= ' AND date <= :date_to';
-            $params[':date_to']=$criteria['date_to'];
+            $params[':date_to'] = $criteria['date_to'];
         }
 
         $query .= ' ORDER BY date DESC LIMIT :limit OFFSET :from';
         $stmt = $this->pdo->prepare($query);
-        foreach($params as $key => $value){
+        foreach ($params as $key => $value) {
             $stmt->bindValue($key, $value);
         }
 
-        $stmt->bindValue(':limit',$limit,PDO::PARAM_INT);
-        $stmt->bindValue(':from',$from,PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':from', $from, PDO::PARAM_INT);
         $stmt->execute();
 
-        $result=$stmt->fetchAll(PDO::FETCH_ASSOC);  
-
-    
-        return $result;
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $expenses = [];
+        foreach ($results as $result) {
+            $expenses[] = $this->createExpenseFromData($result);
+        }
+        return $expenses;
     }
-
 
     public function countBy(array $criteria): int
     {
-        //for pagination ?
-        // TODO: Implement countBy() method.
+        
+        
          $query= 'SELECT COUNT(*) FROM expenses where user_id=:user_id';
         $params=[':user_id'=> $criteria['user_id']];
 
@@ -137,110 +148,113 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
 
     public function listExpenditureYears(User $user): array
     {
-        // TODO: Implement listExpenditureYears() method.
+        
 
-        $query = 'SELECT Distinct Year(e.Date) From expenditures e';
-        $stmt = $this -> pdo-> prepare($query);
+        $query = 'SELECT DISTINCT strftime("%Y", date) as year FROM expenses';
+        $stmt = $this->pdo->prepare($query);
         $stmt->execute();
-        $years= $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $years = $stmt->fetchAll(PDO::FETCH_COLUMN);
         return $years;
     }
 
     public function sumAmountsByCategory(array $criteria): array
     {
-        // TODO: Implement sumAmountsByCategory() method.
-        $query = ' SELECT category, SUM(Amount_cents) from expenses where user_id=:user_id';
-        $params=[':user_id'=> $criteria['user_id']];
-        if(!empty($criteria['category'])){
-            $query .= ' AND category = :category ';
-            $params[':category']=$criteria['category'];
+        $query = 'SELECT category, SUM(amount_cents) as total FROM expenses WHERE user_id = :user_id';
+        $params = [':user_id' => $criteria['user_id']];
+        
+        if (!empty($criteria['category'])) {
+            $query .= ' AND category = :category';
+            $params[':category'] = $criteria['category'];
         }
-        if(!empty($criteria['date_from'])){
+        
+        if (!empty($criteria['date_from'])) {
             $query .= ' AND date >= :date_from';
-            $params[':date_from']=$criteria['date_from'];
-
+            $params[':date_from'] = $criteria['date_from'];
         }
-        if(!empty($criteria['date_to'])){
+        
+        if (!empty($criteria['date_to'])) {
             $query .= ' AND date <= :date_to';
-            $params[':date_to']=$criteria['date_to'];
+            $params[':date_to'] = $criteria['date_to'];
         }
-
+        
         $query .= ' GROUP BY category';
-
-        $stmt= $this->pdo->prepare($query);
-        foreach($params as $key => $value){
+        
+        $stmt = $this->pdo->prepare($query);
+        foreach ($params as $key => $value) {
             $stmt->bindValue($key, $value);
         }
         $stmt->execute();
-
-        $result=$stmt->fetchAll(PDO::FETCH_ASSOC);
-        return $result;
+        
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($results as &$result) {
+            $result['total'] = $result['total'] / 100.0; 
+        }
+        return $results;
     }
 
     public function averageAmountsByCategory(array $criteria): array
     {
-       
-        // TODO: Implement averageAmountsByCategory() method.
-        $query = ' SELECT category, AVG(Amount_cents) from expenses where user_id=:user_id';
-        $params=[':user_id'=> $criteria['user_id']];
-        if(!empty($criteria['category'])){
-            $query .= ' AND category = :category ';
-            $params[':category']=$criteria['category'];
+        $query = 'SELECT category, AVG(amount_cents) as average FROM expenses WHERE user_id = :user_id';
+        $params = [':user_id' => $criteria['user_id']];
+        
+        if (!empty($criteria['category'])) {
+            $query .= ' AND category = :category';
+            $params[':category'] = $criteria['category'];
         }
-        if(!empty($criteria['date_from'])){
+        
+        if (!empty($criteria['date_from'])) {
             $query .= ' AND date >= :date_from';
-            $params[':date_from']=$criteria['date_from'];
-
+            $params[':date_from'] = $criteria['date_from'];
         }
-        if(!empty($criteria['date_to'])){
+        
+        if (!empty($criteria['date_to'])) {
             $query .= ' AND date <= :date_to';
-            $params[':date_to']=$criteria['date_to'];
+            $params[':date_to'] = $criteria['date_to'];
         }
-
+        
         $query .= ' GROUP BY category';
-
-        $stmt= $this->pdo->prepare($query);
-        foreach($params as $key => $value){
+        
+        $stmt = $this->pdo->prepare($query);
+        foreach ($params as $key => $value) {
             $stmt->bindValue($key, $value);
         }
         $stmt->execute();
-
-        $result=$stmt->fetchAll(PDO::FETCH_ASSOC);
-        return $result;
+        
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($results as &$result) {
+            $result['average'] = $result['average'] / 100.0; 
+        }
+        return $results;
     }
 
     public function sumAmounts(array $criteria): float
     {
-        // TODO: Implement sumAmounts() method.
-
-        $query = ' SELECT  SUM(Amount_cents) from expenses where user_id=:user_id';
-        $params=[':user_id'=> $criteria['user_id']];
-        if(!empty($criteria['category'])){
-            $query .= ' AND category = :category ';
-            $params[':category']=$criteria['category'];
+        $query = 'SELECT SUM(amount_cents) as total FROM expenses WHERE user_id = :user_id';
+        $params = [':user_id' => $criteria['user_id']];
+        
+        if (!empty($criteria['category'])) {
+            $query .= ' AND category = :category';
+            $params[':category'] = $criteria['category'];
         }
-        if(!empty($criteria['date_from'])){
+        
+        if (!empty($criteria['date_from'])) {
             $query .= ' AND date >= :date_from';
-            $params[':date_from']=$criteria['date_from'];
-
+            $params[':date_from'] = $criteria['date_from'];
         }
-        if(!empty($criteria['date_to'])){
+        
+        if (!empty($criteria['date_to'])) {
             $query .= ' AND date <= :date_to';
-            $params[':date_to']=$criteria['date_to'];
+            $params[':date_to'] = $criteria['date_to'];
         }
-
-       
-
-        $stmt= $this->pdo->prepare($query);
-        foreach($params as $key => $value){
+        
+        $stmt = $this->pdo->prepare($query);
+        foreach ($params as $key => $value) {
             $stmt->bindValue($key, $value);
         }
         $stmt->execute();
-
-        $result=$stmt->fetchColumn();
-        return $result !==null ? (float) $result :0.0;
-
         
+        $result = $stmt->fetchColumn();
+        return $result !== null ? (float)$result / 100.0 : 0.0; 
     }
 
     /**

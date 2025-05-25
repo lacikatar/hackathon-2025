@@ -28,6 +28,13 @@
 </nav>
 
 <div class="max-w-5xl mx-auto px-4 flex-grow w-full">
+    {% if session.flash_message is defined %}
+        <div class="mb-4 p-4 rounded-lg {% if session.flash_message.type == 'success' %}bg-green-900/50 border border-green-700 text-green-300{% else %}bg-red-900/50 border border-red-700 text-red-300{% endif %}">
+            {{ session.flash_message.message }}
+        </div>
+        {% set flash_message = null %}
+    {% endif %}
+
     {% block content %}
     {% endblock %}
 </div>
